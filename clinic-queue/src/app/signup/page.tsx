@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useState } from "react";
+import { supabase } from "@/lib/supabase";
 
 export default function SignupPage() {
   const [name, setName] = useState("");
@@ -14,10 +15,33 @@ export default function SignupPage() {
     event.preventDefault();
     setError(null);
     setIsSubmitting(true);
+    
     try {
-      // Placeholder: integrate real signup later
-      await new Promise((resolve) => setTimeout(resolve, 800));
-      window.location.href = "/";
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          data: {
+            full_name: name,
+          },
+        },
+      });
+
+      if (error) {
+        setError(error.message);
+        return;
+      }
+
+      if (data.user) {
+        // Check if email confirmation is required
+        if (data.user.email_confirmed_at) {
+          // User is immediately confirmed, redirect to dashboard
+          window.location.href = "/dashboard";
+        } else {
+          // Email confirmation required
+          setError("Please check your email to confirm your account.");
+        }
+      }
     } catch (e) {
       setError("Unable to create account. Please try again.");
     } finally {

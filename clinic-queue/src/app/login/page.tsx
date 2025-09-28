@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useState } from "react";
+import { supabase } from "@/lib/supabase";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
@@ -13,11 +14,22 @@ export default function LoginPage() {
     event.preventDefault();
     setError(null);
     setIsSubmitting(true);
+    
     try {
-      // Placeholder: integrate real auth later
-      await new Promise((resolve) => setTimeout(resolve, 600));
-      // On success, route to dashboard/home for now
-      window.location.href = "/";
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+
+      if (error) {
+        setError(error.message);
+        return;
+      }
+
+      if (data.user) {
+        // Redirect to dashboard or home page after successful login
+        window.location.href = "/dashboard";
+      }
     } catch (e) {
       setError("Unable to sign in. Please try again.");
     } finally {
