@@ -40,6 +40,14 @@ export default function LoginPage() {
   return (
     <main className="min-h-dvh flex items-center justify-center px-6 py-16">
       <div className="w-full max-w-md">
+        <div className="mb-3">
+          <Link
+            href="/"
+            className="inline-flex items-center justify-center rounded-md h-9 px-3 text-sm font-medium border border-black/[.08] dark:border-white/[.145] hover:bg-black/[.04] dark:hover:bg-white/[.06] transition"
+          >
+            Back
+          </Link>
+        </div>
         <div className="mb-8 text-center">
           <h1 className="text-3xl font-semibold">Welcome back</h1>
           <p className="text-foreground/70 mt-2">Sign in to manage your clinic queues.</p>
