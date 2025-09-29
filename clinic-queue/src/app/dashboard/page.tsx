@@ -2,9 +2,11 @@
 
 import { useAuth } from "@/components/context/AuthProvider";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 
 export default function DashboardPage() {
   const { user, signOut } = useAuth();
+  const router = useRouter();
 
   return (
     <main className="min-h-dvh flex items-center justify-center px-6 py-16">
@@ -20,17 +22,14 @@ export default function DashboardPage() {
 
         <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 w-full sm:w-auto justify-center">
           <button
-            onClick={signOut}
+            onClick={async () => {
+              await signOut();
+              router.push("/");
+            }}
             className="inline-flex items-center justify-center rounded-md bg-red-600 text-white h-11 px-5 font-medium hover:bg-red-700 transition"
           >
             Sign Out
           </button>
-          <Link
-            href="/"
-            className="inline-flex items-center justify-center rounded-md border border-black/[.08] dark:border-white/[.145] h-11 px-5 font-medium hover:bg-black/[.04] dark:hover:bg-white/[.06] transition"
-          >
-            Back to Home
-          </Link>
         </div>
       </div>
     </main>
