@@ -35,8 +35,8 @@ export default function SignupPage() {
       if (data.user) {
         // Check if email confirmation is required
         if (data.user.email_confirmed_at) {
-          // User is immediately confirmed, redirect to dashboard
-          window.location.href = "/dashboard";
+          // User is immediately confirmed, redirect to home
+          window.location.href = "/";
         } else {
           // Email confirmation required
           setError("Please check your email to confirm your account.");

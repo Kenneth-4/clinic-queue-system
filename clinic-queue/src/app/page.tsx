@@ -3,6 +3,8 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
+import { useAuth } from "@/components/context/AuthProvider";
+import { useRouter } from "next/navigation";
 
 type QueueItem = {
   id: string | number;
@@ -14,10 +16,13 @@ type QueueItem = {
 };
 
 export default function Home() {
+  const { user, signOut } = useAuth();
+  const router = useRouter();
   const [queue, setQueue] = useState<QueueItem[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const [refreshing, setRefreshing] = useState<boolean>(false);
+  const [isProfileOpen, setIsProfileOpen] = useState<boolean>(false);
 
   const fetchQueue = async () => {
     setError(null);
@@ -57,18 +62,31 @@ export default function Home() {
         <div className="max-w-5xl mx-auto px-6 h-16 flex items-center justify-between">
           <div className="font-semibold">Clinic Queue System</div>
           <nav className="flex items-center gap-3">
-            <Link
-              href="/login"
-              className="inline-flex items-center justify-center rounded-md h-9 px-3 text-sm font-medium border border-black/[.08] dark:border-white/[.145] hover:bg-black/[.04] dark:hover:bg-white/[.06] transition"
-            >
-              Log in
-            </Link>
-            <Link
-              href="/signup"
-              className="inline-flex items-center justify-center rounded-md h-9 px-3 text-sm font-medium bg-foreground text-background hover:opacity-90 transition"
-            >
-              Create account
-            </Link>
+            {user ? (
+              <>
+                <button
+                  onClick={() => setIsProfileOpen(true)}
+                  className="inline-flex items-center justify-center rounded-md h-9 px-3 text-sm font-medium border border-black/[.08] dark:border-white/[.145] hover:bg-black/[.04] dark:hover:bg-white/[.06] transition"
+                >
+                  Profile
+                </button>
+              </>
+            ) : (
+              <>
+                <Link
+                  href="/login"
+                  className="inline-flex items-center justify-center rounded-md h-9 px-3 text-sm font-medium border border-black/[.08] dark:border-white/[.145] hover:bg-black/[.04] dark:hover:bg-white/[.06] transition"
+                >
+                  Log in
+                </Link>
+                <Link
+                  href="/signup"
+                  className="inline-flex items-center justify-center rounded-md h-9 px-3 text-sm font-medium bg-foreground text-background hover:opacity-90 transition"
+                >
+                  Create account
+                </Link>
+              </>
+            )}
           </nav>
         </div>
       </header>
@@ -135,6 +153,75 @@ export default function Home() {
           </section>
         </div>
       </main>
+
+      {/* Profile Drawer */}
+      {user && (
+        <>
+          {/* Overlay */}
+          <div
+            className={`fixed inset-0 bg-black/40 transition-opacity ${
+              isProfileOpen ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"
+            }`}
+            onClick={() => setIsProfileOpen(false)}
+            aria-hidden={!isProfileOpen}
+          />
+
+          {/* Drawer Panel */}
+          <aside
+            role="dialog"
+            aria-modal="true"
+            aria-label="Profile and Settings"
+            className={`fixed right-0 top-0 h-dvh w-full max-w-sm bg-background border-l border-black/[.08] dark:border-white/[.145] shadow-xl transition-transform duration-300 flex flex-col ${
+              isProfileOpen ? "translate-x-0" : "translate-x-full"
+            }`}
+          >
+            <div className="h-16 px-4 border-b border-black/[.06] dark:border-white/[.08] flex items-center justify-between">
+              <div className="font-semibold">Profile</div>
+              <button
+                onClick={() => setIsProfileOpen(false)}
+                className="inline-flex items-center justify-center rounded-md h-9 px-3 text-sm font-medium border border-black/[.08] dark:border-white/[.145] hover:bg-black/[.04] dark:hover:bg-white/[.06] transition"
+                aria-label="Close profile"
+              >
+                Close
+              </button>
+            </div>
+
+            <div className="p-4 flex-1 overflow-auto flex flex-col gap-6">
+              <section className="space-y-1">
+                <h3 className="text-sm font-medium text-foreground/80">Signed in as</h3>
+                <p className="text-base font-semibold break-words">{user.email}</p>
+              </section>
+
+              <section className="space-y-3">
+                <h3 className="text-sm font-medium text-foreground/80">Settings</h3>
+                <div className="space-y-2">
+                  <button className="w-full inline-flex items-center justify-between rounded-md h-11 px-3 text-sm font-medium border border-black/[.08] dark:border-white/[.145] hover:bg-black/[.04] dark:hover:bg-white/[.06] transition">
+                    Account settings
+                    <span className="text-foreground/50">›</span>
+                  </button>
+                  <button className="w-full inline-flex items-center justify-between rounded-md h-11 px-3 text-sm font-medium border border-black/[.08] dark:border-white/[.145] hover:bg-black/[.04] dark:hover:bg-white/[.06] transition">
+                    Notification preferences
+                    <span className="text-foreground/50">›</span>
+                  </button>
+                </div>
+              </section>
+
+              <div className="pt-2 border-t border-black/[.06] dark:border-white/[.08]">
+                <button
+                  onClick={async () => {
+                    await signOut();
+                    setIsProfileOpen(false);
+                    router.push("/");
+                  }}
+                  className="w-full inline-flex items-center justify-center rounded-md bg-red-600 text-white h-11 px-5 font-medium hover:bg-red-700 transition"
+                >
+                  Logout
+                </button>
+              </div>
+            </div>
+          </aside>
+        </>
+      )}
     </div>
   );
 }

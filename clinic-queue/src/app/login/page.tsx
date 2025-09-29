@@ -27,8 +27,8 @@ export default function LoginPage() {
       }
 
       if (data.user) {
-        // Redirect to dashboard or home page after successful login
-        window.location.href = "/dashboard";
+        // Redirect to home page after successful login
+        window.location.href = "/";
       }
     } catch (e) {
       setError("Unable to sign in. Please try again.");
