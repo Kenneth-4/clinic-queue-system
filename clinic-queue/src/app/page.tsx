@@ -23,6 +23,9 @@ export default function Home() {
   const [error, setError] = useState<string | null>(null);
   const [refreshing, setRefreshing] = useState<boolean>(false);
   const [isProfileOpen, setIsProfileOpen] = useState<boolean>(false);
+  const [isAppointmentOpen, setIsAppointmentOpen] = useState<boolean>(false);
+  const [patientName, setPatientName] = useState<string>("");
+  const [booking, setBooking] = useState<boolean>(false);
 
   const fetchQueue = async () => {
     setError(null);
@@ -125,10 +128,14 @@ export default function Home() {
               <div className="text-foreground/70">No patients in the ongoing queue.</div>
             ) : (
               <ul className="grid gap-3 grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
-                {queue.map((item) => (
+                {queue.map((item, index) => (
                   <li
                     key={String(item.id)}
-                    className="aspect-square rounded-lg border border-black/[.08] dark:border-white/[.145] p-4 flex flex-col items-center justify-center text-center gap-2"
+                    className={`aspect-square rounded-lg border p-4 flex flex-col items-center justify-center text-center gap-2 ${
+                      index === 0
+                        ? "border-emerald-500/50 dark:border-emerald-400/50 bg-emerald-50 dark:bg-emerald-950/30"
+                        : "border-black/[.08] dark:border-white/[.145]"
+                    }`}
                   >
                     <div className="w-14 h-14 rounded-md bg-foreground text-background flex items-center justify-center text-xl font-semibold">
                       {item.position ?? "-"}
@@ -139,12 +146,29 @@ export default function Home() {
                     <div className="text-xs text-foreground/70">
                       Ticket {item.ticket_number ?? "—"}
                     </div>
-                    <div className="text-[10px] text-foreground/60 uppercase tracking-wide">
-                      {item.status ?? "ongoing"}
-                    </div>
+                    {index === 0 ? (
+                      <div className="text-[10px] font-semibold text-emerald-700 dark:text-emerald-300 uppercase tracking-wide">
+                        Right now
+                      </div>
+                    ) : (
+                      <div className="text-[10px] text-foreground/60 uppercase tracking-wide">
+                        {item.status ?? "ongoing"}
+                      </div>
+                    )}
                   </li>
                 ))}
               </ul>
+            )}
+
+            {user && (
+              <div className="pt-2">
+                <button
+                  onClick={() => setIsAppointmentOpen(true)}
+                  className="inline-flex items-center justify-center rounded-md h-10 px-4 text-sm font-medium bg-foreground text-background hover:opacity-90 transition"
+                >
+                  Book appointment
+                </button>
+              </div>
             )}
 
             <p className="text-xs text-foreground/60">
@@ -220,6 +244,111 @@ export default function Home() {
               </div>
             </div>
           </aside>
+        </>
+      )}
+
+      {/* Appointment Modal */}
+      {isAppointmentOpen && (
+        <>
+          <div
+            className="fixed inset-0 bg-black/50"
+            onClick={() => {
+              if (!booking) setIsAppointmentOpen(false);
+            }}
+          />
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-label="Book appointment"
+            className="fixed inset-0 flex items-center justify-center p-4"
+          >
+            <div className="w-full max-w-sm rounded-lg border border-black/[.08] dark:border-white/[.145] bg-background shadow-xl">
+              <div className="px-4 py-3 border-b border-black/[.06] dark:border-white/[.08] flex items-center justify-between">
+                <div className="font-semibold">Book appointment</div>
+                <button
+                  onClick={() => {
+                    if (!booking) setIsAppointmentOpen(false);
+                  }}
+                  className="inline-flex items-center justify-center rounded-md h-9 px-3 text-sm font-medium border border-black/[.08] dark:border-white/[.145] hover:bg-black/[.04] dark:hover:bg-white/[.06] transition"
+                >
+                  Close
+                </button>
+              </div>
+              <form
+                className="p-4 space-y-3"
+                onSubmit={async (e) => {
+                  e.preventDefault();
+                  if (!patientName.trim()) return;
+                  try {
+                    setBooking(true);
+                    // Determine next position based on current ongoing queue
+                    const nextPosition =
+                      queue.length > 0
+                        ? Math.max(
+                            ...queue
+                              .map((q) => (typeof q.position === "number" ? q.position : 0))
+                          ) + 1
+                        : 1;
+
+                    const nextTicketNumber = nextPosition; // Simple mapping; adjust if your schema differs
+
+                    const { error: insertError } = await supabase
+                      .from("queue")
+                      .insert([
+                        {
+                          patient_name: patientName.trim(),
+                          position: nextPosition,
+                          ticket_number: nextTicketNumber,
+                          status: "ongoing",
+                        },
+                      ]);
+
+                    if (insertError) {
+                      setError(insertError.message);
+                    } else {
+                      setPatientName("");
+                      setIsAppointmentOpen(false);
+                      await fetchQueue();
+                    }
+                  } catch (err) {
+                    const message = err instanceof Error ? err.message : "Unknown error";
+                    setError(message);
+                  } finally {
+                    setBooking(false);
+                  }
+                }}
+              >
+                <label className="block text-sm font-medium text-foreground/80">Your name</label>
+                <input
+                  type="text"
+                  value={patientName}
+                  onChange={(e) => setPatientName(e.target.value)}
+                  placeholder="Enter full name"
+                  className="mt-1 w-full rounded-md border border-black/[.08] dark:border-white/[.145] px-3 h-10 bg-background"
+                  disabled={booking}
+                />
+                <div className="pt-2 flex items-center justify-end gap-2">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (!booking) setIsAppointmentOpen(false);
+                    }}
+                    className="inline-flex items-center justify-center rounded-md h-10 px-4 text-sm font-medium border border-black/[.08] dark:border-white/[.145] hover:bg-black/[.04] dark:hover:bg-white/[.06] transition"
+                    disabled={booking}
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    className="inline-flex items-center justify-center rounded-md h-10 px-4 text-sm font-medium bg-foreground text-background hover:opacity-90 transition disabled:opacity-60"
+                    disabled={booking || !patientName.trim()}
+                  >
+                    {booking ? "Booking..." : "Confirm"}
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
         </>
       )}
     </div>
