@@ -15,10 +15,18 @@ type QueueItem = {
   created_at?: string;
 };
 
+type Doctor = {
+  id: string;
+  name: string;
+  specialization?: string;
+  is_active: boolean;
+};
+
 export default function Home() {
-  const { user, signOut } = useAuth();
+  const { user, signOut, isAdmin } = useAuth();
   const router = useRouter();
   const [queue, setQueue] = useState<QueueItem[]>([]);
+  const [currentDoctor, setCurrentDoctor] = useState<Doctor | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const [refreshing, setRefreshing] = useState<boolean>(false);
@@ -50,8 +58,30 @@ export default function Home() {
     setRefreshing(false);
   };
 
+  const fetchCurrentDoctor = async () => {
+    try {
+      const { data, error } = await supabase
+        .from("doctors")
+        .select("*")
+        .eq("is_active", true)
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .single();
+
+      if (error && error.code !== "PGRST116") {
+        // PGRST116 is "no rows returned" which is fine
+        setError(error.message);
+      } else {
+        setCurrentDoctor(data);
+      }
+    } catch (err) {
+      // Ignore errors for doctor fetching
+    }
+  };
+
   useEffect(() => {
     fetchQueue();
+    fetchCurrentDoctor();
     // Optionally, poll every 20s. Comment out if not desired.
     const interval = setInterval(fetchQueue, 20000);
     return () => clearInterval(interval);
@@ -67,6 +97,14 @@ export default function Home() {
           <nav className="flex items-center gap-3">
             {user ? (
               <>
+                {isAdmin && (
+                  <Link
+                    href="/admin"
+                    className="inline-flex items-center justify-center rounded-md h-9 px-3 text-sm font-medium border border-black/[.08] dark:border-white/[.145] hover:bg-black/[.04] dark:hover:bg-white/[.06] transition"
+                  >
+                    Admin
+                  </Link>
+                )}
                 <button
                   onClick={() => setIsProfileOpen(true)}
                   className="inline-flex items-center justify-center rounded-md h-9 px-3 text-sm font-medium border border-black/[.08] dark:border-white/[.145] hover:bg-black/[.04] dark:hover:bg-white/[.06] transition"
@@ -102,8 +140,13 @@ export default function Home() {
               Doctor in charge:
             </span>
             <h1 className="text-4xl sm:text-5xl font-sans font-semibold tracking-tight">
-              Dr. John Doe
+              {currentDoctor ? currentDoctor.name : "Dr. John Doe"}
             </h1>
+            {currentDoctor?.specialization && (
+              <p className="text-lg text-foreground/70">
+                {currentDoctor.specialization}
+              </p>
+            )}
           </section>
 
           {/* Ongoing Queue */}
