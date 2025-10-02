@@ -58,6 +58,7 @@ export default function Home() {
     setRefreshing(false);
   };
 
+
   const fetchCurrentDoctor = async () => {
     try {
       const { data, error } = await supabase
@@ -97,20 +98,29 @@ export default function Home() {
           <nav className="flex items-center gap-3">
             {user ? (
               <>
-                {isAdmin && (
-                  <Link
-                    href="/admin"
+                {isAdmin ? (
+                  <>
+                    <Link
+                      href="/admin"
+                      className="inline-flex items-center justify-center rounded-md h-9 px-3 text-sm font-medium border border-black/[.08] dark:border-white/[.145] hover:bg-black/[.04] dark:hover:bg-white/[.06] transition"
+                    >
+                      Admin
+                    </Link>
+                    <Link
+                      href="/stats"
+                      className="inline-flex items-center justify-center rounded-md h-9 px-3 text-sm font-medium border border-black/[.08] dark:border-white/[.145] hover:bg-black/[.04] dark:hover:bg-white/[.06] transition"
+                    >
+                      Statistics
+                    </Link>
+                  </>
+                ) : (
+                  <button
+                    onClick={() => setIsProfileOpen(true)}
                     className="inline-flex items-center justify-center rounded-md h-9 px-3 text-sm font-medium border border-black/[.08] dark:border-white/[.145] hover:bg-black/[.04] dark:hover:bg-white/[.06] transition"
                   >
-                    Admin
-                  </Link>
+                    Profile
+                  </button>
                 )}
-                <button
-                  onClick={() => setIsProfileOpen(true)}
-                  className="inline-flex items-center justify-center rounded-md h-9 px-3 text-sm font-medium border border-black/[.08] dark:border-white/[.145] hover:bg-black/[.04] dark:hover:bg-white/[.06] transition"
-                >
-                  Profile
-                </button>
               </>
             ) : (
               <>
@@ -221,8 +231,8 @@ export default function Home() {
         </div>
       </main>
 
-      {/* Profile Drawer */}
-      {user && (
+      {/* Profile Drawer (hidden for admin) */}
+      {user && !isAdmin && (
         <>
           {/* Overlay */}
           <div
@@ -289,6 +299,8 @@ export default function Home() {
           </aside>
         </>
       )}
+
+      {/* Statistics moved to /stats page for admins */}
 
       {/* Appointment Modal */}
       {isAppointmentOpen && (
