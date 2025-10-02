@@ -76,6 +76,7 @@ export default function AdminDashboard() {
       const { data, error } = await supabase
         .from("queue")
         .select("*")
+        .eq("status", "ongoing")
         .order("position", { ascending: true });
 
       if (error) {
@@ -174,7 +175,7 @@ export default function AdminDashboard() {
     try {
       const { error } = await supabase
         .from("queue")
-        .update({ status: "skipped" })
+        .delete()
         .eq("id", id);
 
       if (error) {
@@ -189,6 +190,53 @@ export default function AdminDashboard() {
 
   const proceedPatient = async (id: string | number) => {
     try {
+      // Move the patient to the front of the queue (position 1)
+      // First, get all ongoing patients to reorder them
+      const { data: ongoingPatients, error: fetchError } = await supabase
+        .from("queue")
+        .select("*")
+        .eq("status", "ongoing")
+        .order("position", { ascending: true });
+
+      if (fetchError) {
+        setError(fetchError.message);
+        return;
+      }
+
+      // Find the patient to proceed
+      const patientToProceed = ongoingPatients?.find(p => p.id === id);
+      if (!patientToProceed) {
+        setError("Patient not found");
+        return;
+      }
+
+      // Update all positions: the proceeded patient gets position 1, others shift down
+      const updates = ongoingPatients?.map((patient, index) => ({
+        id: patient.id,
+        position: patient.id === id ? 1 : index + 2
+      }));
+
+      // Update positions in batch
+      for (const update of updates || []) {
+        const { error } = await supabase
+          .from("queue")
+          .update({ position: update.position })
+          .eq("id", update.id);
+
+        if (error) {
+          setError(error.message);
+          return;
+        }
+      }
+
+      await fetchQueue();
+    } catch (err) {
+      setError("Failed to proceed patient");
+    }
+  };
+
+  const donePatient = async (id: string | number) => {
+    try {
       const { error } = await supabase
         .from("queue")
         .update({ status: "completed" })
@@ -200,26 +248,10 @@ export default function AdminDashboard() {
         await fetchQueue();
       }
     } catch (err) {
-      setError("Failed to proceed patient");
+      setError("Failed to mark patient as done");
     }
   };
 
-  const markAsOngoing = async (id: string | number) => {
-    try {
-      const { error } = await supabase
-        .from("queue")
-        .update({ status: "ongoing" })
-        .eq("id", id);
-
-      if (error) {
-        setError(error.message);
-      } else {
-        await fetchQueue();
-      }
-    } catch (err) {
-      setError("Failed to mark as ongoing");
-    }
-  };
 
   const deletePatient = async (id: string | number) => {
     if (!confirm("Are you sure you want to delete this patient from the queue?")) return;
@@ -358,36 +390,30 @@ export default function AdminDashboard() {
                             {item.patient_name || "Patient"}
                           </div>
                           <div className="text-sm text-foreground/70">
-                            Ticket {item.ticket_number ?? "—"} • {item.status}
+                            Ticket {item.ticket_number ?? "—"}
                             {index === 0 && " • Right now"}
                           </div>
                         </div>
                       </div>
                       <div className="flex gap-2">
-                        {item.status === "ongoing" && (
-                          <>
-                            <button
-                              onClick={() => skipPatient(item.id)}
-                              className="text-xs px-3 py-1 bg-yellow-100 dark:bg-yellow-900 text-yellow-700 dark:text-yellow-300 rounded hover:bg-yellow-200 dark:hover:bg-yellow-800 transition"
-                            >
-                              Skip
-                            </button>
-                            <button
-                              onClick={() => proceedPatient(item.id)}
-                              className="text-xs px-3 py-1 bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-300 rounded hover:bg-green-200 dark:hover:bg-green-800 transition"
-                            >
-                              Proceed
-                            </button>
-                          </>
-                        )}
-                        {item.status !== "ongoing" && (
-                          <button
-                            onClick={() => markAsOngoing(item.id)}
-                            className="text-xs px-3 py-1 bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 rounded hover:bg-blue-200 dark:hover:bg-blue-800 transition"
-                          >
-                            Mark Ongoing
-                          </button>
-                        )}
+                        <button
+                          onClick={() => skipPatient(item.id)}
+                          className="text-xs px-3 py-1 bg-yellow-100 dark:bg-yellow-900 text-yellow-700 dark:text-yellow-300 rounded hover:bg-yellow-200 dark:hover:bg-yellow-800 transition"
+                        >
+                          Skip
+                        </button>
+                        <button
+                          onClick={() => proceedPatient(item.id)}
+                          className="text-xs px-3 py-1 bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-300 rounded hover:bg-green-200 dark:hover:bg-green-800 transition"
+                        >
+                          Proceed
+                        </button>
+                        <button
+                          onClick={() => donePatient(item.id)}
+                          className="text-xs px-3 py-1 bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 rounded hover:bg-blue-200 dark:hover:bg-blue-800 transition"
+                        >
+                          Done
+                        </button>
                         <button
                           onClick={() => deletePatient(item.id)}
                           className="text-xs px-3 py-1 bg-red-100 dark:bg-red-900 text-red-700 dark:text-red-300 rounded hover:bg-red-200 dark:hover:bg-red-800 transition"
