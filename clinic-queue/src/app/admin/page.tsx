@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/components/context/AuthProvider";
+import { useTheme } from "@/components/context/ThemeProvider";
 import { useRouter } from "next/navigation";
 
 type Doctor = {
@@ -25,6 +26,7 @@ type QueueItem = {
 
 export default function AdminDashboard() {
   const { user, signOut } = useAuth();
+  const { theme, toggleTheme } = useTheme();
   const router = useRouter();
   const [doctors, setDoctors] = useState<Doctor[]>([]);
   const [queue, setQueue] = useState<QueueItem[]>([]);
@@ -316,6 +318,14 @@ export default function AdminDashboard() {
             >
               View Queue
             </Link>
+            <button
+              onClick={toggleTheme}
+              aria-label="Toggle theme"
+              className="inline-flex items-center justify-center rounded-md h-9 px-3 text-sm font-medium border border-black/[.08] dark:border-white/[.145] hover:bg-black/[.04] dark:hover:bg-white/[.06] transition"
+              title={theme === "dark" ? "Switch to light" : "Switch to dark"}
+            >
+              {theme === "dark" ? "Light" : "Dark"}
+            </button>
             <button
               onClick={async () => {
                 await signOut();

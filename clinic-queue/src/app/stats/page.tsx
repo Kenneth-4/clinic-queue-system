@@ -5,11 +5,13 @@ import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/components/context/AuthProvider";
+import { useTheme } from "@/components/context/ThemeProvider";
 
 type DailyPoint = { date: string; total: number; ongoing: number; completed: number; skipped: number };
 
 export default function StatsPage() {
   const { user, isAdmin } = useAuth();
+  const { theme, toggleTheme } = useTheme();
   const router = useRouter();
   const [fromDate, setFromDate] = useState<string>(() => {
     const d = new Date();
@@ -99,6 +101,14 @@ export default function StatsPage() {
             >
               Back to Queue
             </Link>
+            <button
+              onClick={toggleTheme}
+              aria-label="Toggle theme"
+              className="inline-flex items-center justify-center rounded-md h-9 px-3 text-sm font-medium border border-black/[.08] dark:border-white/[.145] hover:bg-black/[.04] dark:hover:bg-white/[.06] transition"
+              title={theme === "dark" ? "Switch to light" : "Switch to dark"}
+            >
+              {theme === "dark" ? "Light" : "Dark"}
+            </button>
           </nav>
         </div>
       </header>
