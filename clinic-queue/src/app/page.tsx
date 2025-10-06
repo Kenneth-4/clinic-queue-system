@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/components/context/AuthProvider";
+import { useTheme } from "@/components/context/ThemeProvider";
 import { useRouter } from "next/navigation";
 
 type QueueItem = {
@@ -24,6 +25,7 @@ type Doctor = {
 
 export default function Home() {
   const { user, signOut, isAdmin } = useAuth();
+  const { theme, toggleTheme } = useTheme();
   const router = useRouter();
   const [queue, setQueue] = useState<QueueItem[]>([]);
   const [currentDoctor, setCurrentDoctor] = useState<Doctor | null>(null);
@@ -272,13 +274,12 @@ export default function Home() {
               <section className="space-y-3">
                 <h3 className="text-sm font-medium text-foreground/80">Settings</h3>
                 <div className="space-y-2">
-                  <button className="w-full inline-flex items-center justify-between rounded-md h-11 px-3 text-sm font-medium border border-black/[.08] dark:border-white/[.145] hover:bg-black/[.04] dark:hover:bg-white/[.06] transition">
-                    Account settings
-                    <span className="text-foreground/50">›</span>
-                  </button>
-                  <button className="w-full inline-flex items-center justify-between rounded-md h-11 px-3 text-sm font-medium border border-black/[.08] dark:border-white/[.145] hover:bg-black/[.04] dark:hover:bg-white/[.06] transition">
-                    Notification preferences
-                    <span className="text-foreground/50">›</span>
+                  <button
+                    onClick={toggleTheme}
+                    className="w-full inline-flex items-center justify-between rounded-md h-11 px-3 text-sm font-medium border border-black/[.08] dark:border-white/[.145] hover:bg-black/[.04] dark:hover:bg-white/[.06] transition"
+                  >
+                    Dark mode
+                    <span className="text-foreground/50">{theme === "dark" ? "On" : "Off"}</span>
                   </button>
                 </div>
               </section>

@@ -171,6 +171,33 @@ export default function AdminDashboard() {
     }
   };
 
+  const setInCharge = async (id: string) => {
+    try {
+      // First, set all to inactive
+      const { error: clearError } = await supabase
+        .from("doctors")
+        .update({ is_active: false });
+      if (clearError) {
+        setError(clearError.message);
+        return;
+      }
+
+      // Then set selected to active
+      const { error: setErrorActive } = await supabase
+        .from("doctors")
+        .update({ is_active: true })
+        .eq("id", id);
+      if (setErrorActive) {
+        setError(setErrorActive.message);
+        return;
+      }
+
+      await fetchDoctors();
+    } catch (err) {
+      setError("Failed to update in-charge doctor");
+    }
+  };
+
   const skipPatient = async (id: string | number) => {
     try {
       const { error } = await supabase
@@ -328,13 +355,25 @@ export default function AdminDashboard() {
                   key={doctor.id}
                   className="p-4 border border-black/[.08] dark:border-white/[.145] rounded-lg"
                 >
-                  <h3 className="font-semibold">{doctor.name}</h3>
+                  <div className="flex items-center justify-between">
+                    <h3 className="font-semibold">{doctor.name}</h3>
+                    {doctor.is_active && (
+                      <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-900 text-emerald-700 dark:text-emerald-300">In charge</span>
+                    )}
+                  </div>
                   {doctor.specialization && (
                     <p className="text-sm text-foreground/70 mt-1">
                       {doctor.specialization}
                     </p>
                   )}
-                  <div className="flex gap-2 mt-3">
+                  <div className="flex gap-2 mt-3 flex-wrap">
+                    <button
+                      onClick={() => setInCharge(doctor.id)}
+                      className="text-xs px-2 py-1 bg-emerald-100 dark:bg-emerald-900 text-emerald-700 dark:text-emerald-300 rounded hover:bg-emerald-200 dark:hover:bg-emerald-800 transition disabled:opacity-60"
+                      disabled={doctor.is_active}
+                    >
+                      {doctor.is_active ? "In charge" : "Set In Charge"}
+                    </button>
                     <button
                       onClick={() => editDoctor(doctor)}
                       className="text-xs px-2 py-1 bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 rounded hover:bg-blue-200 dark:hover:bg-blue-800 transition"
