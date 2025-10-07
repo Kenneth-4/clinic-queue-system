@@ -307,100 +307,15 @@ export default function AdminDashboard() {
 
   return (
     <div className="min-h-dvh flex flex-col">
-      {/* Header */}
-      <header className="w-full border-b border-black/[.06] dark:border-white/[.08]">
-        <div className="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
-          <div className="font-semibold">Admin Dashboard</div>
-          <nav className="flex items-center gap-3">
-            <Link
-              href="/"
-              className="inline-flex items-center justify-center rounded-md h-9 px-3 text-sm font-medium border border-black/[.08] dark:border-white/[.145] hover:bg-black/[.04] dark:hover:bg-white/[.06] transition"
-            >
-              View Queue
-            </Link>
-            <button
-              onClick={toggleTheme}
-              aria-label="Toggle theme"
-              className="inline-flex items-center justify-center rounded-md h-9 px-3 text-sm font-medium border border-black/[.08] dark:border-white/[.145] hover:bg-black/[.04] dark:hover:bg-white/[.06] transition"
-              title={theme === "dark" ? "Switch to light" : "Switch to dark"}
-            >
-              {theme === "dark" ? "Light" : "Dark"}
-            </button>
-            <button
-              onClick={async () => {
-                await signOut();
-                router.push("/");
-              }}
-              className="inline-flex items-center justify-center rounded-md h-9 px-3 text-sm font-medium bg-red-600 text-white hover:bg-red-700 transition"
-            >
-              Logout
-            </button>
-          </nav>
-        </div>
-      </header>
-
-      <main className="flex-1 px-6 py-10">
-        <div className="max-w-6xl mx-auto space-y-8">
+      <main className="flex-1">
+        <div className="space-y-8">
           {error && (
             <div className="p-4 bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-800 rounded-lg">
               <p className="text-red-600 dark:text-red-400">{error}</p>
             </div>
           )}
 
-          {/* Doctors Management */}
-          <section className="space-y-4">
-            <div className="flex items-center justify-between">
-              <h2 className="text-xl font-semibold">Doctors Management</h2>
-              <button
-                onClick={() => setIsDoctorModalOpen(true)}
-                className="inline-flex items-center justify-center rounded-md h-9 px-3 text-sm font-medium bg-foreground text-background hover:opacity-90 transition"
-              >
-                Add Doctor
-              </button>
-            </div>
-
-            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-              {doctors.map((doctor) => (
-                <div
-                  key={doctor.id}
-                  className="p-4 border border-black/[.08] dark:border-white/[.145] rounded-lg"
-                >
-                  <div className="flex items-center justify-between">
-                    <h3 className="font-semibold">{doctor.name}</h3>
-                    {doctor.is_active && (
-                      <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-900 text-emerald-700 dark:text-emerald-300">In charge</span>
-                    )}
-                  </div>
-                  {doctor.specialization && (
-                    <p className="text-sm text-foreground/70 mt-1">
-                      {doctor.specialization}
-                    </p>
-                  )}
-                  <div className="flex gap-2 mt-3 flex-wrap">
-                    <button
-                      onClick={() => setInCharge(doctor.id)}
-                      className="text-xs px-2 py-1 bg-emerald-100 dark:bg-emerald-900 text-emerald-700 dark:text-emerald-300 rounded hover:bg-emerald-200 dark:hover:bg-emerald-800 transition disabled:opacity-60"
-                      disabled={doctor.is_active}
-                    >
-                      {doctor.is_active ? "In charge" : "Set In Charge"}
-                    </button>
-                    <button
-                      onClick={() => editDoctor(doctor)}
-                      className="text-xs px-2 py-1 bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 rounded hover:bg-blue-200 dark:hover:bg-blue-800 transition"
-                    >
-                      Edit
-                    </button>
-                    <button
-                      onClick={() => deleteDoctor(doctor.id)}
-                      className="text-xs px-2 py-1 bg-red-100 dark:bg-red-900 text-red-700 dark:text-red-300 rounded hover:bg-red-200 dark:hover:bg-red-800 transition"
-                    >
-                      Delete
-                    </button>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </section>
+          {/* Doctors section moved to /admin/doctors */}
 
           {/* Queue Management */}
           <section className="space-y-4">

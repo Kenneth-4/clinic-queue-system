@@ -27,8 +27,9 @@ export default function LoginPage() {
       }
 
       if (data.user) {
-        // Redirect to home page after successful login
-        window.location.href = "/";
+        const email = data.user.email || "";
+        const isAdmin = email.toLowerCase() === "admin@clinic.com";
+        window.location.href = isAdmin ? "/admin" : "/";
       }
     } catch (e) {
       setError("Unable to sign in. Please try again.");

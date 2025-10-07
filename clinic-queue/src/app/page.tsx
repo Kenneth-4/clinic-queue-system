@@ -36,6 +36,7 @@ export default function Home() {
   const [isAppointmentOpen, setIsAppointmentOpen] = useState<boolean>(false);
   const [patientName, setPatientName] = useState<string>("");
   const [booking, setBooking] = useState<boolean>(false);
+  const AVERAGE_MINUTES_PER_PATIENT = 10; // adjust as needed
 
   const fetchQueue = async () => {
     setError(null);
@@ -208,6 +209,11 @@ export default function Home() {
                     </div>
                     <div className="text-xs text-foreground/70">
                       Ticket {item.ticket_number ?? "—"}
+                    </div>
+                    <div className="text-xs text-foreground/60">
+                      {index === 0
+                        ? "Est. wait: Now"
+                        : `Est. wait: ~${index * AVERAGE_MINUTES_PER_PATIENT} min`}
                     </div>
                     {index === 0 ? (
                       <div className="text-[10px] font-semibold text-emerald-700 dark:text-emerald-300 uppercase tracking-wide">
